@@ -42,9 +42,18 @@ def fragment(func):
         def foo(self):
             return self['foo']
     """
+    name = func.__name__ if callable(func) else func
+
     def _get(self):
-        return self[func.__name__]
-    return property(_get, None, None, func.__doc__)
+        return self[name]
+
+    def wrapper(func):
+        return property(_get, None, None, func.__doc__)
+
+    if callable(func):
+        return property(_get, None, None, func.__doc__)
+    else:
+        return wrapper
 
 
 def readonly(func):
@@ -61,9 +70,18 @@ def readonly(func):
         def foo(self):
             return self['foo'].value
     """
+    name = func.__name__ if callable(func) else func
+
     def _get(self):
-        return self[func.__name__].value
-    return property(_get, None, None, func.__doc__)
+        return self[name].value
+
+    def wrapper(func):
+        return property(_get, None, None, func.__doc__)
+
+    if callable(func):
+        return property(_get, None, None, func.__doc__)
+    else:
+        return wrapper
 
 
 def readwrite(func):
@@ -86,15 +104,23 @@ def readwrite(func):
         def foo(self, new_value):
             return self['foo'] = new_value
     """
+    name = func.__name__ if callable(func) else func
+
     def _get(self):
-        return self[func.__name__].value
+        return self[name].value
 
     def _set(self, new_value):
         # XXX: Dear reader, see what __setitem__ does to understand why we
         # don't assign to .value
-        self[func.__name__] = new_value
+        self[name] = new_value
 
     def _del(self):
-        del self[func.__name__]
+        del self[name]
 
-    return property(_get, _set, _del, func.__doc__)
+    def wrapper(func):
+        return property(_get, _set, _del, func.__doc__)
+
+    if callable(func):
+        return property(_get, _set, _del, func.__doc__)
+    else:
+        return wrapper
