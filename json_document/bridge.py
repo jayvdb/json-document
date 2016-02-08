@@ -43,7 +43,13 @@ def fragment(func):
             return self['foo']
     """
     def _get(self):
-        return self[func.__name__]
+        try:
+            return self[func.__name__]
+        except KeyError as e:
+            try:
+                return self[func.__name__.replace('_', '-')]
+            except KeyError:
+                raise e
     return property(_get, None, None, func.__doc__)
 
 
@@ -62,7 +68,13 @@ def readonly(func):
             return self['foo'].value
     """
     def _get(self):
-        return self[func.__name__].value
+        try:
+            return self[func.__name__].value
+        except KeyError as e:
+            try:
+                return self[func.__name__.replace('_', '-')].value
+            except KeyError:
+                raise e
     return property(_get, None, None, func.__doc__)
 
 
@@ -87,14 +99,32 @@ def readwrite(func):
             return self['foo'] = new_value
     """
     def _get(self):
-        return self[func.__name__].value
+        try:
+            return self[func.__name__].value
+        except KeyError as e:
+            try:
+                return self[func.__name__.replace('_', '-')].value
+            except KeyError:
+                raise e
 
     def _set(self, new_value):
         # XXX: Dear reader, see what __setitem__ does to understand why we
         # don't assign to .value
-        self[func.__name__] = new_value
+        try:
+            self[func.__name__] = new_value
+        except KeyError as e:
+            try:
+                self[func.__name__.replace('_', '-')] = new_value
+            except KeyError:
+                raise e
 
     def _del(self):
-        del self[func.__name__]
+        try:
+            del self[func.__name__]
+        except KeyError as e:
+            try:
+                del self[func.__name__.replace('_', '-')]
+            except KeyError:
+                raise e
 
     return property(_get, _set, _del, func.__doc__)
